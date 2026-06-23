@@ -1,0 +1,108 @@
+name: Update Versions
+
+# Weekly check for the latest Velociraptor release. Bumps `ARG VELO_VERSION`
+# and recomputes `ARG VELO_SHA256` (sha256 of the linux-amd64-musl asset) in the
+# Dockerfile, then opens a PR. After merging, run release-image.yml manually to publish.
+on:
+  schedule:
+    # Every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Get latest Velociraptor release
+        id: velo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Latest non-prerelease tag (e.g. v0.76.6)
+          LATEST=$(gh api repos/Velocidex/velociraptor/releases/latest --jq '.tag_name')
+          if [ -z "$LATEST" ] || [ "$LATEST" = "null" ]; then
+            echo "ERROR: could not resolve latest Velociraptor release" >&2
+            exit 1
+          fi
+          echo "version=${LATEST}" >> $GITHUB_OUTPUT
+          echo "Velociraptor latest: ${LATEST}"
+
+      - name: Compute musl asset sha256
+        id: sha
+        run: |
+          VERSION="${{ steps.velo.outputs.version }}"
+          ASSET="velociraptor-${VERSION}-linux-amd64-musl"
+          URL="https://github.com/Velocidex/velociraptor/releases/download/${VERSION}/${ASSET}"
+
+          echo "Downloading ${URL}"
+          if ! curl -fsSL -o "$ASSET" "$URL"; then
+            echo "ERROR: musl asset not found for ${VERSION} (${URL})" >&2
+            exit 1
+          fi
+
+          SHA=$(sha256sum "$ASSET" | awk '{print $1}')
+          echo "sha256=${SHA}" >> $GITHUB_OUTPUT
+          echo "sha256(${ASSET}) = ${SHA}"
+          rm -f "$ASSET"
+
+      - name: Update Dockerfile
+        run: |
+          VERSION="${{ steps.velo.outputs.version }}"
+          SHA="${{ steps.sha.outputs.sha256 }}"
+
+          sed -i "s|^ARG VELO_VERSION=.*|ARG VELO_VERSION=${VERSION}|" Dockerfile
+          sed -i "s|^ARG VELO_SHA256=.*|ARG VELO_SHA256=${SHA}|" Dockerfile
+
+          echo "Dockerfile now pins:"
+          grep -E '^ARG VELO_(VERSION|SHA256)=' Dockerfile
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected — already up to date."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff --stat
+          fi
+
+      - name: Update README references
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          VERSION="${{ steps.velo.outputs.version }}"
+          PLAIN="${VERSION#v}"
+          # Bump the example version strings in the README (e.g. 0.76.6, v0.76.6)
+          sed -i -E "s|velociraptor:[0-9]+\.[0-9]+\.[0-9]+-distroless|velociraptor:${PLAIN}-distroless|g" README.md
+          sed -i -E "s|VELO_VERSION=v[0-9]+\.[0-9]+\.[0-9]+|VELO_VERSION=${VERSION}|g" README.md
+          sed -i -E "s|releases/download/v[0-9]+\.[0-9]+\.[0-9]+/velociraptor-v[0-9]+\.[0-9]+\.[0-9]+|releases/download/${VERSION}/velociraptor-${VERSION}|g" README.md
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: bump Velociraptor to ${{ steps.velo.outputs.version }}"
+          title: "chore: bump Velociraptor to ${{ steps.velo.outputs.version }}"
+          body: |
+            ## Automated version update
+
+            | Component | Version |
+            |-----------|---------|
+            | Velociraptor | `${{ steps.velo.outputs.version }}` |
+            | sha256 (linux-amd64-musl) | `${{ steps.sha.outputs.sha256 }}` |
+
+            After merging, manually run `release-image.yml` to build and push the image.
+          branch: chore/update-velociraptor
+          delete-branch: true
