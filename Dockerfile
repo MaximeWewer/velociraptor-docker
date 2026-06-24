@@ -13,9 +13,9 @@
 # ---- fetch + verify stage ----
 FROM alpine:3.24 AS fetch
 
-ARG VELO_VERSION=v0.76.6
+ARG VELO_VERSION=v0.77.1
 # sha256 of velociraptor-${VELO_VERSION}-linux-amd64-musl (pinned, verified at build)
-ARG VELO_SHA256=84ad1652ff6e79694441a06a6af4040aae6a982080d2ef583a31bda52f58e299
+ARG VELO_SHA256=c39e0d402776555d35c9555df41d5901bfb7f32f4baba1d06795d12862028a4f
 ARG TARGETARCH=amd64
 
 RUN apk add --no-cache curl
