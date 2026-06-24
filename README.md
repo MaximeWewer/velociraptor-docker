@@ -26,18 +26,18 @@ consumes this image (`image.repository: maximewewer/velociraptor`).
 ## Build (local)
 
 ```bash
-docker build -t velociraptor:0.76.6-distroless .
+docker build -t velociraptor:0.77.1-distroless .
 # version / checksum are overridable:
 docker build \
-  --build-arg VELO_VERSION=v0.76.6 \
+  --build-arg VELO_VERSION=v0.77.1 \
   --build-arg VELO_SHA256=84ad1652ff6e79694441a06a6af4040aae6a982080d2ef583a31bda52f58e299 \
-  -t velociraptor:0.76.6-distroless .
+  -t velociraptor:0.77.1-distroless .
 ```
 
 To update the version manually: change `VELO_VERSION`, recompute the sha256
 (normally `update-versions.yml` does this automatically):
 ```bash
-curl -fsSL "https://github.com/Velocidex/velociraptor/releases/download/v0.76.6/velociraptor-v0.76.6-linux-amd64-musl" | sha256sum
+curl -fsSL "https://github.com/Velocidex/velociraptor/releases/download/v0.77.1/velociraptor-v0.77.1-linux-amd64-musl" | sha256sum
 ```
 
 ## Config generation (out-of-band)
