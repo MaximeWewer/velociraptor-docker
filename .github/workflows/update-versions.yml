@@ -2,7 +2,7 @@ name: Update Versions
 
 # Weekly check for the latest Velociraptor release. Bumps `ARG VELO_VERSION`
 # and recomputes `ARG VELO_SHA256` (sha256 of the linux-amd64-musl asset) in the
-# Dockerfile, then opens a PR. After merging, run release-image.yml manually to publish.
+# Dockerfile, then opens a PR. Merging the PR auto-triggers release-image.yml.
 on:
   schedule:
     # Every Monday at 08:00 UTC
@@ -103,6 +103,6 @@ jobs:
             | Velociraptor | `${{ steps.velo.outputs.version }}` |
             | sha256 (linux-amd64-musl) | `${{ steps.sha.outputs.sha256 }}` |
 
-            After merging, manually run `release-image.yml` to build and push the image.
+            Merging this PR auto-triggers `release-image.yml` to build and push the image.
           branch: chore/update-velociraptor
           delete-branch: true
