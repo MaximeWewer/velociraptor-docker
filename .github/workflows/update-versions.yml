@@ -1,7 +1,7 @@
 name: Update Versions
 
 # Weekly check for the latest Velociraptor release. Bumps `ARG VELO_VERSION`
-# and recomputes `ARG VELO_SHA256` (sha256 of the linux-amd64-musl asset) in the
+# and recomputes `ARG VELO_SHA256` (sha256 of the linux-amd64-musl.gz asset) in the
 # Dockerfile, then opens a PR. Merging the PR auto-triggers release-image.yml.
 on:
   schedule:
@@ -41,7 +41,7 @@ jobs:
         id: sha
         run: |
           VERSION="${{ steps.velo.outputs.version }}"
-          ASSET="velociraptor-${VERSION}-linux-amd64-musl"
+          ASSET="velociraptor-${VERSION}-linux-amd64-musl.gz"  # only the gzipped binary is published since v0.77.3
           URL="https://github.com/Velocidex/velociraptor/releases/download/${VERSION}/${ASSET}"
 
           echo "Downloading ${URL}"
@@ -101,7 +101,7 @@ jobs:
             | Component | Version |
             |-----------|---------|
             | Velociraptor | `${{ steps.velo.outputs.version }}` |
-            | sha256 (linux-amd64-musl) | `${{ steps.sha.outputs.sha256 }}` |
+            | sha256 (linux-amd64-musl.gz) | `${{ steps.sha.outputs.sha256 }}` |
 
             Merging this PR auto-triggers `release-image.yml` to build and push the image.
           branch: chore/update-velociraptor

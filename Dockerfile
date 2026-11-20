@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #
-# Velociraptor server — hardened image.
+# Velociraptor server - hardened image.
 # Baseline: distroless, rootless (uid 65532), minimal attack surface.
 # Unlike the upstream image (alpine:latest, root, runtime config generation via
 # a shell entrypoint), we ship only the statically-linked binary on distroless.
@@ -8,14 +8,15 @@
 #
 # amd64 only: the linux-amd64-musl asset is fully static and runs on
 # distroless/static. The arm64 release is dynamically linked (no musl variant),
-# so it would need a glibc base — out of scope for this image.
+# so it would need a glibc base - out of scope for this image.
 
 # ---- fetch + verify stage ----
 FROM alpine:3.24 AS fetch
 
-ARG VELO_VERSION=v0.77.2
-# sha256 of velociraptor-${VELO_VERSION}-linux-amd64-musl (pinned, verified at build)
-ARG VELO_SHA256=f3ffe0ed9942975214c1b7ba7a24b201eaff4ad827575342b43544158b64c524
+ARG VELO_VERSION=v0.77.3
+# sha256 of the release asset velociraptor-${VELO_VERSION}-linux-amd64-musl.gz (pinned,
+# verified at build). Since v0.77.3 Velocidex only publishes the gzipped binary.
+ARG VELO_SHA256=b4699d7ecfd5c0d656d86379e41f0eb34b0f12c3cb45398f1e747f10844d7930
 ARG TARGETARCH=amd64
 
 RUN apk add --no-cache curl
@@ -25,9 +26,10 @@ RUN set -eux; \
       echo "ERROR: only amd64 supported (static musl build). arm64 has no musl asset." >&2; \
       exit 1; \
     fi; \
-    curl -fsSL -o velociraptor \
-      "https://github.com/Velocidex/velociraptor/releases/download/${VELO_VERSION}/velociraptor-${VELO_VERSION}-linux-amd64-musl"; \
-    echo "${VELO_SHA256}  velociraptor" | sha256sum -c -; \
+    curl -fsSL -o velociraptor.gz \
+      "https://github.com/Velocidex/velociraptor/releases/download/${VELO_VERSION}/velociraptor-${VELO_VERSION}-linux-amd64-musl.gz"; \
+    echo "${VELO_SHA256}  velociraptor.gz" | sha256sum -c -; \
+    gunzip velociraptor.gz; \
     chmod 0755 velociraptor; \
     # Empty custom-artifacts dir so a config referencing it works on a
     # read-only rootfs (matches the upstream image). Override by mounting a
