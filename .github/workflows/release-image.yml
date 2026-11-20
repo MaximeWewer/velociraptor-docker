@@ -10,10 +10,11 @@ on:
         description: 'Override version tag (optional, e.g. 0.76.6). Defaults to ARG VELO_VERSION in Dockerfile.'
         required: false
         type: string
-  # Auto-release when the version-bump PR from update-versions.yml is merged.
-  pull_request:
-    types: [closed]
+  # Auto-release when the pinned version changes on main: direct pushes and merged
+  # version-bump PRs from update-versions.yml alike (a merge is a push to main).
+  push:
     branches: [main]
+    paths: [Dockerfile]
 
 permissions:
   contents: read
@@ -31,11 +32,6 @@ jobs:
   prepare:
     name: Prepare release
     runs-on: ubuntu-latest
-    # Manual dispatch, OR the bot's version-bump PR (chore/update-velociraptor) was merged.
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.merged == true &&
-       github.event.pull_request.head.ref == 'chore/update-velociraptor')
     outputs:
       version: ${{ steps.get_version.outputs.version }}
       image_name_lower: ${{ steps.lowercase.outputs.image_name_lower }}
