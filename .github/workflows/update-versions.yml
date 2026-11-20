@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -34,7 +34,7 @@ jobs:
             echo "ERROR: could not resolve latest Velociraptor release" >&2
             exit 1
           fi
-          echo "version=${LATEST}" >> $GITHUB_OUTPUT
+          echo "version=${LATEST}" >> "$GITHUB_OUTPUT"
           echo "Velociraptor latest: ${LATEST}"
 
       - name: Compute musl asset sha256
@@ -51,7 +51,7 @@ jobs:
           fi
 
           SHA=$(sha256sum "$ASSET" | awk '{print $1}')
-          echo "sha256=${SHA}" >> $GITHUB_OUTPUT
+          echo "sha256=${SHA}" >> "$GITHUB_OUTPUT"
           echo "sha256(${ASSET}) = ${SHA}"
           rm -f "$ASSET"
 
@@ -70,10 +70,10 @@ jobs:
         id: changes
         run: |
           if git diff --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No changes detected — already up to date."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected - already up to date."
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "Changes detected:"
             git diff --stat
           fi
@@ -90,7 +90,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: bump Velociraptor to ${{ steps.velo.outputs.version }}"
