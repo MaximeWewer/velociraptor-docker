@@ -13,10 +13,10 @@
 # ---- fetch + verify stage ----
 FROM alpine:3.24 AS fetch
 
-ARG VELO_VERSION=v0.77.3
+ARG VELO_VERSION=v0.77.4
 # sha256 of the release asset velociraptor-${VELO_VERSION}-linux-amd64-musl.gz (pinned,
 # verified at build). Since v0.77.3 Velocidex only publishes the gzipped binary.
-ARG VELO_SHA256=b4699d7ecfd5c0d656d86379e41f0eb34b0f12c3cb45398f1e747f10844d7930
+ARG VELO_SHA256=dc093453cd9e2da8778fed58f165fdc040f9484fd199814b6ddb0fc29b665b10
 ARG TARGETARCH=amd64
 
 RUN apk add --no-cache curl

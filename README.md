@@ -28,18 +28,18 @@ this image (`image.repository: maximewewer/velociraptor`).
 ## Build (local)
 
 ```bash
-docker build -t velociraptor:0.77.3-distroless .
+docker build -t velociraptor:0.77.4-distroless .
 # version / checksum are overridable:
 docker build \
-  --build-arg VELO_VERSION=v0.77.3 \
+  --build-arg VELO_VERSION=v0.77.4 \
   --build-arg VELO_SHA256=b4699d7ecfd5c0d656d86379e41f0eb34b0f12c3cb45398f1e747f10844d7930 \
-  -t velociraptor:0.77.3-distroless .
+  -t velociraptor:0.77.4-distroless .
 ```
 
 To update the version manually: change `VELO_VERSION`, recompute the sha256 of the
 `.gz` asset (normally `update-versions.yml` does this automatically):
 ```bash
-curl -fsSL "https://github.com/Velocidex/velociraptor/releases/download/v0.77.3/velociraptor-v0.77.3-linux-amd64-musl.gz" | sha256sum
+curl -fsSL "https://github.com/Velocidex/velociraptor/releases/download/v0.77.4/velociraptor-v0.77.4-linux-amd64-musl.gz" | sha256sum
 ```
 
 ## Server config
